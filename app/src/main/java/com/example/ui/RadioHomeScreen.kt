@@ -119,6 +119,7 @@ import com.example.model.BibleVerse
 import com.example.model.PlaybackStatus
 import com.example.model.SongTrack
 import com.example.ui.components.AudioVisualizer
+import com.example.ui.components.BottomMiniPlayer
 import com.example.ui.components.DailyVerseMiniCard
 import com.example.ui.components.DailyVerseScreen
 import com.example.ui.components.PlayerSleepTimerCard
@@ -213,65 +214,47 @@ fun RadioHomeScreen(
             TopAppBar(
                 title = {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         // Small circular logo matching screenshot top left
                         Box(
                             modifier = Modifier
-                                .size(34.dp)
+                                .size(36.dp)
                                 .clip(CircleShape)
-                                .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
+                                .background(Color(0xFF1B1B22))
+                                .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+                                .clickable { viewModel.openStreamInfoDialog() },
                             contentAlignment = Alignment.Center
                         ) {
                             Image(
                                 painter = painterResource(id = R.drawable.ic_renuevo_artwork),
                                 contentDescription = "Logo Renuevo Radio",
-                                modifier = Modifier.fillMaxSize(),
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(CircleShape),
                                 contentScale = ContentScale.Crop
-                            )
-                        }
-
-                        Column {
-                            Text(
-                                text = "Renuevo Radio",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = "102.4 FM • ¡Música y Vida!",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.SemiBold
                             )
                         }
                     }
                 },
                 actions = {
-                    // Live Indicator Badge
-                    LivePillBadge(isPlaying = status == PlaybackStatus.PLAYING)
+                    // Minimalist chevron down button matching screenshot top right
+                    IconButton(
+                        onClick = { isTopMenuOpen = true },
+                        modifier = Modifier.testTag("top_bar_menu_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = "Menú opciones",
+                            tint = Color.White.copy(alpha = 0.85f),
+                            modifier = Modifier.size(30.dp)
+                        )
+                    }
 
-                    Spacer(modifier = Modifier.width(4.dp))
-
-                    // Minimalist single "Más" menu matching the reference screenshot
-                    Box {
-                        IconButton(
-                            onClick = { isTopMenuOpen = true },
-                            modifier = Modifier.testTag("top_bar_menu_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.KeyboardArrowDown,
-                                contentDescription = "Menú Más opciones",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(28.dp)
-                            )
-                        }
-
-                        DropdownMenu(
-                            expanded = isTopMenuOpen,
-                            onDismissRequest = { isTopMenuOpen = false }
-                        ) {
+                    DropdownMenu(
+                        expanded = isTopMenuOpen,
+                        onDismissRequest = { isTopMenuOpen = false }
+                    ) {
                             DropdownMenuItem(
                                 text = { Text("Versículo del Día (RVR1960)") },
                                 leadingIcon = {
@@ -388,7 +371,6 @@ fun RadioHomeScreen(
                                 modifier = Modifier.testTag("menu_item_share")
                             )
                         }
-                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
@@ -397,93 +379,142 @@ fun RadioHomeScreen(
             )
         },
         bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp,
-                windowInsets = WindowInsets.navigationBars,
-                modifier = Modifier.testTag("bottom_nav_bar")
-            ) {
-                NavigationBarItem(
-                    selected = selectedTab == MainTab.PLAYER,
-                    onClick = { viewModel.selectTab(MainTab.PLAYER) },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.Headphones,
-                            contentDescription = "Radio en Vivo"
-                        )
-                    },
-                    label = { Text("Listen") },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = MaterialTheme.colorScheme.onPrimary,
-                        indicatorColor = MaterialTheme.colorScheme.primary,
-                        selectedTextColor = MaterialTheme.colorScheme.primary
-                    ),
-                    modifier = Modifier.testTag("nav_tab_player")
+            Column(modifier = Modifier.fillMaxWidth()) {
+                // Persistent Floating Mini Player when navigating outside the PLAYER tab
+                BottomMiniPlayer(
+                    status = status,
+                    currentTrack = currentTrack,
+                    visible = selectedTab != MainTab.PLAYER,
+                    onClickExpand = { viewModel.selectTab(MainTab.PLAYER) },
+                    onTogglePlayPause = { viewModel.togglePlayPause() }
                 )
-                NavigationBarItem(
-                    selected = selectedTab == MainTab.VERSE,
-                    onClick = { viewModel.selectTab(MainTab.VERSE) },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.AutoStories,
-                            contentDescription = "Versículo del Día RVR1960"
-                        )
-                    },
-                    label = { Text("Versículo") },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = MaterialTheme.colorScheme.onPrimary,
-                        indicatorColor = MaterialTheme.colorScheme.primary,
-                        selectedTextColor = MaterialTheme.colorScheme.primary
-                    ),
-                    modifier = Modifier.testTag("nav_tab_verse")
-                )
-                NavigationBarItem(
-                    selected = selectedTab == MainTab.HISTORY,
-                    onClick = { viewModel.selectTab(MainTab.HISTORY) },
-                    icon = {
-                        BadgedBox(
-                            badge = {
-                                if (songHistory.isNotEmpty()) {
-                                    Badge(
-                                        containerColor = MaterialTheme.colorScheme.primary,
-                                        contentColor = MaterialTheme.colorScheme.onPrimary
-                                    ) {
-                                        Text("${songHistory.size}", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+
+                NavigationBar(
+                    containerColor = Color(0xFF0D0D0F),
+                    tonalElevation = 0.dp,
+                    windowInsets = WindowInsets.navigationBars,
+                    modifier = Modifier
+                        .testTag("bottom_nav_bar")
+                        .border(BorderStroke(0.5.dp, Color(0xFF1E1E24)))
+                ) {
+                    NavigationBarItem(
+                        selected = selectedTab == MainTab.PLAYER,
+                        onClick = { viewModel.selectTab(MainTab.PLAYER) },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.MusicNote,
+                                contentDescription = "Radio en Vivo",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        },
+                        label = { 
+                            Text(
+                                text = "Listen",
+                                fontSize = 11.sp,
+                                fontWeight = if (selectedTab == MainTab.PLAYER) FontWeight.Bold else FontWeight.Normal
+                            ) 
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = DarkPrimary,
+                            unselectedIconColor = Color(0xFF71717A),
+                            selectedTextColor = DarkPrimary,
+                            unselectedTextColor = Color(0xFF71717A),
+                            indicatorColor = Color.Transparent
+                        ),
+                        modifier = Modifier.testTag("nav_tab_player")
+                    )
+                    NavigationBarItem(
+                        selected = selectedTab == MainTab.HISTORY,
+                        onClick = { viewModel.selectTab(MainTab.HISTORY) },
+                        icon = {
+                            BadgedBox(
+                                badge = {
+                                    if (songHistory.isNotEmpty()) {
+                                        Badge(
+                                            containerColor = DarkPrimary,
+                                            contentColor = Color.Black
+                                        ) {
+                                            Text("${songHistory.size}", fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                        }
                                     }
                                 }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.QueueMusic,
+                                    contentDescription = "Playlist",
+                                    modifier = Modifier.size(24.dp)
+                                )
                             }
-                        ) {
+                        },
+                        label = { 
+                            Text(
+                                text = "Playlist",
+                                fontSize = 11.sp,
+                                fontWeight = if (selectedTab == MainTab.HISTORY) FontWeight.Bold else FontWeight.Normal
+                            ) 
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = DarkPrimary,
+                            unselectedIconColor = Color(0xFF71717A),
+                            selectedTextColor = DarkPrimary,
+                            unselectedTextColor = Color(0xFF71717A),
+                            indicatorColor = Color.Transparent
+                        ),
+                        modifier = Modifier.testTag("nav_tab_history")
+                    )
+                    NavigationBarItem(
+                        selected = selectedTab == MainTab.VERSE,
+                        onClick = { viewModel.selectTab(MainTab.VERSE) },
+                        icon = {
                             Icon(
-                                imageVector = Icons.Default.QueueMusic,
-                                contentDescription = "Playlist e Historial de Canciones"
+                                imageVector = Icons.Default.AutoStories,
+                                contentDescription = "Versículo del Día",
+                                modifier = Modifier.size(24.dp)
                             )
-                        }
-                    },
-                    label = { Text("Playlist") },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = MaterialTheme.colorScheme.onPrimary,
-                        indicatorColor = MaterialTheme.colorScheme.primary,
-                        selectedTextColor = MaterialTheme.colorScheme.primary
-                    ),
-                    modifier = Modifier.testTag("nav_tab_history")
-                )
-                NavigationBarItem(
-                    selected = selectedTab == MainTab.SETTINGS,
-                    onClick = { viewModel.selectTab(MainTab.SETTINGS) },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Ajustes y Conexión"
-                        )
-                    },
-                    label = { Text("Ajustes") },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = MaterialTheme.colorScheme.onPrimary,
-                        indicatorColor = MaterialTheme.colorScheme.primary,
-                        selectedTextColor = MaterialTheme.colorScheme.primary
-                    ),
-                    modifier = Modifier.testTag("nav_tab_settings")
-                )
+                        },
+                        label = { 
+                            Text(
+                                text = "Versículo",
+                                fontSize = 11.sp,
+                                fontWeight = if (selectedTab == MainTab.VERSE) FontWeight.Bold else FontWeight.Normal
+                            ) 
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = DarkPrimary,
+                            unselectedIconColor = Color(0xFF71717A),
+                            selectedTextColor = DarkPrimary,
+                            unselectedTextColor = Color(0xFF71717A),
+                            indicatorColor = Color.Transparent
+                        ),
+                        modifier = Modifier.testTag("nav_tab_verse")
+                    )
+                    NavigationBarItem(
+                        selected = selectedTab == MainTab.SETTINGS,
+                        onClick = { viewModel.selectTab(MainTab.SETTINGS) },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = "Conectar",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        },
+                        label = { 
+                            Text(
+                                text = "Connect",
+                                fontSize = 11.sp,
+                                fontWeight = if (selectedTab == MainTab.SETTINGS) FontWeight.Bold else FontWeight.Normal
+                            ) 
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = DarkPrimary,
+                            unselectedIconColor = Color(0xFF71717A),
+                            selectedTextColor = DarkPrimary,
+                            unselectedTextColor = Color(0xFF71717A),
+                            indicatorColor = Color.Transparent
+                        ),
+                        modifier = Modifier.testTag("nav_tab_settings")
+                    )
+                }
             }
         }
     ) { innerPadding ->
@@ -610,17 +641,17 @@ fun ScreenshotInspiredPlayer(
     )
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Atmospheric Ambient Halo behind album art (exact style of screenshot)
+        // Atmospheric Ambient Halo behind album art (exact style of screenshot: wide radiating yellow glow)
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(top = 20.dp)
-                .size(340.dp)
+                .padding(top = 10.dp)
+                .size(380.dp)
                 .background(
                     Brush.radialGradient(
                         colors = listOf(
                             AmbientGlowYellow.copy(alpha = glowAlpha),
-                            AmbientGlowYellow.copy(alpha = glowAlpha * 0.4f),
+                            AmbientGlowYellow.copy(alpha = glowAlpha * 0.45f),
                             Color.Transparent
                         )
                     )
@@ -631,9 +662,9 @@ fun ScreenshotInspiredPlayer(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 22.dp, vertical = 12.dp),
+                .padding(horizontal = 24.dp, vertical = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.Top
         ) {
             // Error banner if any
             AnimatedVisibility(visible = errorMessage != null) {
@@ -667,23 +698,24 @@ fun ScreenshotInspiredPlayer(
                 }
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            // Prominent Square Artwork Card (Styled after screenshot)
+            // Prominent Square Artwork Card (Styled identically after screenshot: 290dp square with rounded corners)
             Card(
                 modifier = Modifier
-                    .size(270.dp)
+                    .size(290.dp)
                     .shadow(
-                        elevation = if (isPlaying) 20.dp else 8.dp,
-                        shape = RoundedCornerShape(26.dp),
-                        spotColor = AmbientGlowYellow
+                        elevation = if (isPlaying) 28.dp else 12.dp,
+                        shape = RoundedCornerShape(28.dp),
+                        spotColor = AmbientGlowYellow,
+                        ambientColor = AmbientGlowYellow
                     )
                     .testTag("station_artwork_card"),
-                shape = RoundedCornerShape(26.dp),
+                shape = RoundedCornerShape(28.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF141518)
+                    containerColor = Color(0xFF141418)
                 ),
-                border = BorderStroke(1.dp, Color(0xFF2E3036))
+                border = BorderStroke(1.5.dp, Color(0xFF26262E))
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -730,32 +762,37 @@ fun ScreenshotInspiredPlayer(
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
-            // Station & Title (Like screenshot: bold main title + subtitle)
+            // Station & Title (Identical to screenshot: bold title + Life Turned Up! style subtitle)
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
                     text = currentTrack?.displayTitle ?: "Renuevo Radio",
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontSize = 26.sp,
+                        letterSpacing = (-0.5).sp
+                    ),
                     fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = Color.White,
                     textAlign = TextAlign.Center,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
                     text = currentTrack?.displayArtist?.let {
-                        if (it == "Renuevo Radio") "102.4 FM • En Vivo" else it
-                    } ?: "102.4 FM • En Vivo",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Medium,
+                        if (it == "Renuevo Radio") "¡Música y Vida! • 102.4 FM" else it
+                    } ?: "¡Música y Vida! • 102.4 FM",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontSize = 17.sp
+                    ),
+                    color = Color.White.copy(alpha = 0.85f),
+                    fontWeight = FontWeight.Normal,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -764,48 +801,50 @@ fun ScreenshotInspiredPlayer(
                 if (sessionDurationFormatted != "00:00") {
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "Sintonizando: $sessionDurationFormatted",
+                        text = "EN VIVO • $sessionDurationFormatted",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
+                        color = DarkPrimary,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Big Iconic Center Play Button (Electric violet with clean white icon)
+            // Big Iconic Center Play Button (Exact match of screenshot: vibrant electric yellow with black play icon)
             Box(
                 modifier = Modifier
-                    .size(80.dp)
+                    .size(86.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary)
+                    .background(DarkPrimary)
                     .clickable { onTogglePlayPause() }
                     .shadow(
-                        elevation = 16.dp,
+                        elevation = 20.dp,
                         shape = CircleShape,
-                        spotColor = MaterialTheme.colorScheme.primary
+                        spotColor = DarkPrimary,
+                        ambientColor = DarkPrimary
                     )
                     .testTag("play_pause_button"),
                 contentAlignment = Alignment.Center
             ) {
                 if (isBuffering) {
                     CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 3.dp,
-                        modifier = Modifier.size(36.dp)
+                        color = Color.Black,
+                        strokeWidth = 3.5.dp,
+                        modifier = Modifier.size(40.dp)
                     )
                 } else {
                     Icon(
                         imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                         contentDescription = if (isPlaying) "Pausar" else "Reproducir",
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(44.dp)
+                        tint = Color.Black,
+                        modifier = Modifier.size(48.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Waveform Visualizer
             AudioVisualizer(
@@ -873,18 +912,6 @@ fun ScreenshotInspiredPlayer(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Volume Control Card
-            VolumeControl(
-                volume = volume,
-                isMuted = isMuted,
-                onVolumeChange = onVolumeChange,
-                onToggleMute = onToggleMute,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
 
             // Dedicated Sleep Timer in Player View (Presets 15m, 30m, 60m + Live countdown)
             PlayerSleepTimerCard(
