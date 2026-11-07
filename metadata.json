@@ -1,0 +1,6 @@
+{
+  "name": "Renuevo Radio",
+  "description": "Radio en vivo oficial de Renuevo Radio con streaming continuo en alta fidelidad, historial de canciones y controles de audio.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
