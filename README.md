@@ -1,6 +1,6 @@
 # Renuevo Radio 102.4 FM 📻✨
 
-Aplicación oficial para Android de **Renuevo Radio (102.4 FM)**: *"¡Música y Vida!"*. Transmisión de audio en vivo de alta fidelidad, diseño moderno y minimalista inspirado en interfaces de radio de alto impacto, carátulas en tiempo real, versículo bíblico diario en versión Reina-Valera 1960 (RVR1960) y reproducción en segundo plano.
+Aplicación oficial para Android de **Renuevo Radio (102.4 FM)**: *"Viviendo en su Presencia"*. Transmisión de audio en vivo de alta fidelidad, diseño moderno y minimalista inspirado en interfaces de radio de alto impacto, carátulas en tiempo real, versículo bíblico diario en versión Reina-Valera 1960 (RVR1960) y reproducción en segundo plano.
 
 ---
 
@@ -103,4 +103,4 @@ app/src/main/java/com/example/
 - **Estación:** Renuevo Radio
 - **Frecuencia:** 102.4 FM
 - **Streaming:** AAC Stereo 96 kbps
-- **Lema:** *"¡Música y Vida!"*
+- **Lema:** *"Viviendo en su Presencia"*

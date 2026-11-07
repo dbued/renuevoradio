@@ -17,6 +17,7 @@ enum class AppThemeMode {
 data class StreamInfo(
     val stationName: String = "RENUEVO RADIO",
     val frequency: String = "102.4 FM",
+    val slogan: String = "Viviendo en su Presencia",
     val genre: String = "Música Cristiana Contemporánea",
     val bitrate: String = "96 kbps",
     val codec: String = "AAC Stereo",

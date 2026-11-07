@@ -786,8 +786,8 @@ fun ScreenshotInspiredPlayer(
 
                 Text(
                     text = currentTrack?.displayArtist?.let {
-                        if (it == "Renuevo Radio") "¡Música y Vida! • 102.4 FM" else it
-                    } ?: "¡Música y Vida! • 102.4 FM",
+                        if (it == "Renuevo Radio") "Viviendo en su Presencia • 102.4 FM" else it
+                    } ?: "Viviendo en su Presencia • 102.4 FM",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontSize = 17.sp
                     ),
@@ -1269,6 +1269,7 @@ fun StreamInfoDialog(
             ) {
                 DetailItem("Estación", streamInfo.stationName)
                 DetailItem("Frecuencia", streamInfo.frequency)
+                DetailItem("Lema", streamInfo.slogan)
                 DetailItem("Motor de Audio", "Media3 ExoPlayer 1.5.0")
                 DetailItem("Calidad de Audio", "${streamInfo.bitrate} (${streamInfo.codec})")
                 DetailItem(

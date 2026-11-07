@@ -166,8 +166,8 @@ fun BottomMiniPlayer(
 
                             Text(
                                 text = currentTrack?.displayArtist?.let {
-                                    if (it == "Renuevo Radio") "¡Música y Vida! • 102.4 FM" else it
-                                } ?: "¡Música y Vida! • 102.4 FM",
+                                    if (it == "Renuevo Radio") "Viviendo en su Presencia • 102.4 FM" else it
+                                } ?: "Viviendo en su Presencia • 102.4 FM",
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     fontSize = 12.sp
                                 ),
